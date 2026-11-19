@@ -1,2 +1,9 @@
 /.vs
 /obj
+/CRN_Technosoft.Practical/.vs
+/CRN_Technosoft.Practical/CRN_Technosoft.API/obj
+/CRN_Technosoft.Practical/CRN_Technosoft.Application/obj
+/CRN_Technosoft.Practical/CRN_Technosoft.Domain/obj
+/CRN_Technosoft.Practical/CRN_Technosoft.Tests/obj
+/CRN_Technosoft.Practical/CRN_Technosoft.Infrastructure/obj
+/CRN_Technosoft.Practical/CRN_Technosoft.API/bin

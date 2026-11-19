@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace CRN_Technosoft.Practical.Controllers
+namespace CRN_Technosoft.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

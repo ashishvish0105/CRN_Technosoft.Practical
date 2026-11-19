@@ -1,0 +1,6 @@
+@CRN_Technosoft.API_HostAddress = http://localhost:5098
+
+GET {{CRN_Technosoft.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

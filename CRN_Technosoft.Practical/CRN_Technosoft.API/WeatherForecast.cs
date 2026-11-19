@@ -1,4 +1,4 @@
-namespace CRN_Technosoft.Practical
+namespace CRN_Technosoft.API
 {
     public class WeatherForecast
     {
