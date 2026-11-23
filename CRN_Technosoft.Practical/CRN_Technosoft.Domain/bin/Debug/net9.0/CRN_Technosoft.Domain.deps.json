@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "CRN_Technosoft.Domain/1.0.0": {
+        "runtime": {
+          "CRN_Technosoft.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CRN_Technosoft.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

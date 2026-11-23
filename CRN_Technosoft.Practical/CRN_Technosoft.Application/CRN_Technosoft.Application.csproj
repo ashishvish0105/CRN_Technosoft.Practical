@@ -6,4 +6,22 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	
+  <ItemGroup>
+    <ProjectReference Include="..\CRN_Technosoft.Domain\CRN_Technosoft.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Mapping\" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="17.0.0" />
+		<PackageReference Include="FluentValidation">
+			<Version>12.1.1</Version>
+		</PackageReference>
+		<PackageReference Include="MediatR">
+			<Version>11.0.0</Version>
+		</PackageReference>
+	</ItemGroup>
+
 </Project>
