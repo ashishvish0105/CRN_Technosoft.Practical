@@ -59,9 +59,10 @@ namespace CRN_Technosoft.Infrastructure
 
 
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IItemRepository, ItemRepository>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
-            //services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }

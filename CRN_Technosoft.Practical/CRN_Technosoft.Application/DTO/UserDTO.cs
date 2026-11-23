@@ -28,7 +28,7 @@ namespace CRN_Technosoft.Application.DTO
 
     public struct EditUserDTO
     {
-        public required Guid Id { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(100, MinimumLength = 1)]
@@ -47,7 +47,7 @@ namespace CRN_Technosoft.Application.DTO
 
     public struct GetUserDTO
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string? UserName { get; set; } = string.Empty;
         public string? Email { get; set; } = string.Empty;
         public string? FirstName { get; set; } = string.Empty;

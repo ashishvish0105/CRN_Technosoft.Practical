@@ -50,7 +50,7 @@ namespace CRN_Technosoft.API.Controllers
             CancellationToken cancellationToken)
         {
             var userId = await _mediator.Send(new AddUserCommand(addUserDto), cancellationToken);
-            if (userId == Guid.Empty)
+            if (userId == 0)
             {
                 throw new InvalidOperationException("User registration did not produce a user identifier.");
             }
@@ -66,7 +66,7 @@ namespace CRN_Technosoft.API.Controllers
         [HttpPut("{userId:guid}")]
         //[Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<ActionResult<ApiResponseModel>> EditUser(
-            [FromRoute] Guid userId,
+            [FromRoute] int userId,
             [FromBody] EditUserDTO editUserDto,
             CancellationToken cancellationToken)
         {
@@ -82,7 +82,7 @@ namespace CRN_Technosoft.API.Controllers
                 new EditUserCommand(userId, editUserDto),
                 cancellationToken);
 
-            if (updatedUserId == Guid.Empty)
+            if (updatedUserId == 0)
             {
                 return NotFound(CreateResponse(
                     "User not found.",
@@ -110,7 +110,7 @@ namespace CRN_Technosoft.API.Controllers
         [HttpGet("{userId:guid}")]
         [Authorize]
         public async Task<ActionResult<ApiResponseModel>> GetUser(
-            [FromRoute] Guid userId,
+            [FromRoute] int userId,
             CancellationToken cancellationToken)
         {
             if (!IsAdministrator() && !IsAuthenticatedUser(userId))
@@ -151,12 +151,12 @@ namespace CRN_Technosoft.API.Controllers
             return User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
         }
 
-        private bool IsAuthenticatedUser(Guid userId)
+        private bool IsAuthenticatedUser(int userId)
         {
             var subject = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-            return Guid.TryParse(subject, out var authenticatedUserId)
+            return int.TryParse(subject, out var authenticatedUserId)
                 && authenticatedUserId == userId;
         }
     }

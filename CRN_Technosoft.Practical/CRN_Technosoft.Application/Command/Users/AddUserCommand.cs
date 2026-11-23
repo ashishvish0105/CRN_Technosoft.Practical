@@ -3,5 +3,5 @@ using MediatR;
 
 namespace CRN_Technosoft.Application.Command.Users
 {
-    public record AddUserCommand(AddUserDTO addUserDTO):IRequest<Guid>;
+    public record AddUserCommand(AddUserDTO addUserDTO):IRequest<int>;
 }

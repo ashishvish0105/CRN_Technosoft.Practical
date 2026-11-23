@@ -4,3 +4,33 @@ GET {{CRN_Technosoft.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+### Get items for a product
+GET {{CRN_Technosoft.API_HostAddress}}/api/items?productId=1
+Accept: application/json
+
+### Get an item
+GET {{CRN_Technosoft.API_HostAddress}}/api/items/1
+Accept: application/json
+
+### Create an item
+POST {{CRN_Technosoft.API_HostAddress}}/api/items
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 10
+}
+
+### Update an item
+PUT {{CRN_Technosoft.API_HostAddress}}/api/items/1
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 12
+}
+
+### Delete an item
+DELETE {{CRN_Technosoft.API_HostAddress}}/api/items/1
+Accept: application/json

@@ -12,5 +12,8 @@ public sealed class AutoMapperProfile : Profile
         CreateMap<CreateProductDTO, ProductEntity>();
         CreateMap<ProductEntity, CreateProductDTO>();
         CreateMap<EditProductDTO, ProductEntity>();
+        CreateMap<ItemEntity, ItemDTO>();
+        CreateMap<CreateItemDTO, ItemEntity>();
+        CreateMap<EditItemDTO, ItemEntity>();
     }
 }

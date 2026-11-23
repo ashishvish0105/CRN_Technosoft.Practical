@@ -1,25 +1,17 @@
 ﻿using CRN_Technosoft.Domain.Entities;
+using CRN_Technosoft.Domain.IRepositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace CRN_Technosoft.Infrastructure.Repositories
 {
 
-    public sealed class ItemRepository
+    public sealed class ItemRepository : IItemRepository
     {
         private readonly ApplicationDbContext _applicationDbContext;
-        private readonly IMemoryCache _memoryCache;
 
-        private const string ProductListCacheKey = "ProductList";
-
-        private static long _productListCacheVersion;
-
-        public ItemRepository(
-            ApplicationDbContext applicationDbContext,
-            IMemoryCache memoryCache)
+        public ItemRepository(ApplicationDbContext applicationDbContext)
         {
             _applicationDbContext = applicationDbContext;
-            _memoryCache = memoryCache;
         }
 
         public async Task<ItemEntity> AddItem(
@@ -93,6 +85,25 @@ namespace CRN_Technosoft.Infrastructure.Repositories
                     Quantity = x.Quantity
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<ItemEntity?> GetItemById(
+            int itemId,
+            CancellationToken cancellationToken = default)
+        {
+            if (itemId <= 0)
+                return null;
+
+            return await _applicationDbContext.Items
+                .AsNoTracking()
+                .Where(x => x.Id == itemId)
+                .Select(x => new ItemEntity
+                {
+                    Id = x.Id,
+                    ProductId = x.ProductId,
+                    Quantity = x.Quantity
+                })
+                .FirstOrDefaultAsync(cancellationToken);
         }
     }
 }
