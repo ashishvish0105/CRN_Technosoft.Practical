@@ -73,11 +73,20 @@ namespace CRN_Technosoft.Infrastructure.Repositories
 
         public async Task<List<ItemEntity>> GetItemList(
             int productId,
+            int pageIndex,
+            int pageSize,
             CancellationToken cancellationToken = default)
         {
+            var safePageIndex = Math.Max(pageIndex, 1);
+            var safePageSize = Math.Clamp(pageSize, 1, 100);
+            var skip = (int)Math.Min((long)(safePageIndex - 1) * safePageSize, int.MaxValue);
+
             return await _applicationDbContext.Items
                 .AsNoTracking()
                 .Where(x => x.ProductId == productId)
+                .OrderBy(x => x.Id)
+                .Skip(skip)
+                .Take(safePageSize)
                 .Select(x => new ItemEntity
                 {
                     Id = x.Id,

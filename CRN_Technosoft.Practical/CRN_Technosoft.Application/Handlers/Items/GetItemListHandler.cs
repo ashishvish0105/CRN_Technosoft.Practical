@@ -11,7 +11,11 @@ public sealed class GetItemListHandler(IItemRepository itemRepository, IMapper m
 {
     public async Task<List<ItemDTO>> Handle(GetItemListQuery request, CancellationToken cancellationToken)
     {
-        var items = await itemRepository.GetItemList(request.ProductId, cancellationToken);
+        var items = await itemRepository.GetItemList(
+            request.ProductId,
+            request.PageIndex,
+            request.PageSize,
+            cancellationToken);
         return mapper.Map<List<ItemDTO>>(items);
     }
 }

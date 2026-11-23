@@ -6,7 +6,16 @@ namespace CRN_Technosoft.Application.DTO
     {
         public string AccessToken { get; init; } = string.Empty;
         public DateTime ExpiresAt { get; init; }
+        public string RefreshToken { get; init; } = string.Empty;
+        public DateTime RefreshTokenExpiresAt { get; init; }
         public User user { get; set; } = new User();
+    }
+
+    public sealed class RefreshTokenRequestDto
+    {
+        [Required]
+        [StringLength(256, MinimumLength = 32)]
+        public required string RefreshToken { get; set; }
     }
     public class User
     {

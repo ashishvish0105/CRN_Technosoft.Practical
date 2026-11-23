@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
 
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<ItemEntity> Items { get; set; }
+    public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
                 .IsRequired();
 
             entity.Property(x => x.CreatedBy)
+                .HasMaxLength(100)
                 .IsRequired();
 
             entity.Property(x => x.CreatedOn)
@@ -59,6 +61,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
                 .IsRequired();
 
             entity.Property(x => x.ModifiedBy)
+                .HasMaxLength(100)
                 .IsRequired(false);
 
             entity.Property(x => x.ModifiedOn)
@@ -79,6 +82,24 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
                 .WithMany(x => x.Items)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<RefreshTokenEntity>(entity =>
+        {
+            entity.ToTable("RefreshToken", "dbo");
+            entity.HasKey(token => token.Id);
+            entity.Property(token => token.TokenHash)
+                .HasMaxLength(64)
+                .IsRequired();
+            entity.Property(token => token.ReplacedByTokenHash)
+                .HasMaxLength(64);
+            entity.HasIndex(token => token.TokenHash)
+                .IsUnique();
+            entity.HasIndex(token => new { token.UserId, token.ExpiresAt });
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(token => token.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

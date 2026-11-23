@@ -62,23 +62,27 @@ namespace CRN_Technosoft.Infrastructure.Repositories
             addUserDTO.PasswordHash =
                 _passwordHasher.HashPassword(addUserDTO, addUser.Password);
 
-            _dbContext.Users.Add(addUserDTO);
-
-            var role = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "customer", cancellationToken);
+            var role = await _dbContext.Roles.FirstOrDefaultAsync(
+                existingRole => existingRole.NormalizedName == "CUSTOMER",
+                cancellationToken);
 
             if (role == null)
             {
-                throw new InvalidOperationException("Admin role not found.");
+                throw new InvalidOperationException("Customer role is not configured.");
             }
 
-            _dbContext.RoleClaims.Add(new IdentityRoleClaim<int>
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            _dbContext.Users.Add(addUserDTO);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _dbContext.UserRoles.Add(new IdentityUserRole<int>
             {
+                UserId = addUserDTO.Id,
                 RoleId = role.Id,
-                ClaimType = "Permission",
-                ClaimValue = "ReadUsers"
             });
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
 
             return addUserDTO.Id;
         }
@@ -105,9 +109,20 @@ namespace CRN_Technosoft.Infrastructure.Repositories
             return editUser.Id;
         }
 
-        public async Task<List<UserEntity>> GetUserList(CancellationToken cancellationToken)
+        public async Task<List<UserEntity>> GetUserList(
+            int pageIndex,
+            int pageSize,
+            CancellationToken cancellationToken)
         {
+            var safePageIndex = Math.Max(pageIndex, 1);
+            var safePageSize = Math.Clamp(pageSize, 1, 100);
+            var skip = (int)Math.Min((long)(safePageIndex - 1) * safePageSize, int.MaxValue);
+
             var users = await _dbContext.Users
+                     .AsNoTracking()
+                     .OrderBy(user => user.Id)
+                     .Skip(skip)
+                     .Take(safePageSize)
                      .Select(u => new UserEntity
                      {
                          Id = u.Id,

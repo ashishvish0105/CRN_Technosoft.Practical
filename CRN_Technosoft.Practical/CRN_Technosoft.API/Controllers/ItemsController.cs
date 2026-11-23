@@ -17,9 +17,13 @@ public sealed class ItemsController(IMediator mediator) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiResponseModel>> GetItemList(
         [FromQuery, Range(1, int.MaxValue)] int productId,
-        CancellationToken cancellationToken)
+        [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+        [FromQuery, Range(1, 100)] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
-        var items = await mediator.Send(new GetItemListQuery(productId), cancellationToken);
+        var items = await mediator.Send(
+            new GetItemListQuery(productId, pageIndex, pageSize),
+            cancellationToken);
         return Ok(new ApiResponseModel(
             "Items retrieved successfully",
             StatusCodes.Status200OK,

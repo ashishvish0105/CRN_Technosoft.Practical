@@ -56,7 +56,7 @@ namespace CRN_Technosoft.Infrastructure.Repositories
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(x => x.ProductName, product.ProductName)
                     .SetProperty(x => x.ModifiedBy, product.ModifiedBy)
-                    .SetProperty(x => x.ModifiedOn, DateTime.Now),
+                    .SetProperty(x => x.ModifiedOn, DateTime.UtcNow),
                     cancellationToken);
 
             if (affectedRows > 0)
@@ -92,7 +92,8 @@ namespace CRN_Technosoft.Infrastructure.Repositories
             CancellationToken cancellationToken = default)
         {
             var safePageIndex = Math.Max(pageIndex, 1);
-            var safePageSize = Math.Max(totalLength, 1);
+            var safePageSize = Math.Clamp(totalLength, 1, 100);
+            var skip = (int)Math.Min((long)(safePageIndex - 1) * safePageSize, int.MaxValue);
 
             var cacheKey =
                 $"{ProductListCacheKey}_{Volatile.Read(ref _productListCacheVersion)}_{safePageIndex}_{safePageSize}";
@@ -105,13 +106,10 @@ namespace CRN_Technosoft.Infrastructure.Repositories
                 return cachedProducts;
             }
 
-            var totalCount = await _applicationDbContext.Products
-                .CountAsync(cancellationToken);
-
             var products = await _applicationDbContext.Products
                 .AsNoTracking()
                 .OrderByDescending(x => x.Id)
-                .Skip((safePageIndex - 1) * safePageSize)
+                .Skip(skip)
                 .Take(safePageSize)
                 .Select(x => new ProductEntity
                 {

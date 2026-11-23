@@ -9,8 +9,8 @@ namespace CRN_Technosoft.Application.DTO
         public required string ProductName { get; set; }
         public DateTime CreatedOn { get; set; }
         public DateTime? ModifiedOn { get; set; }
-        public Guid CreatedBy { get; set; }
-        public Guid? ModifiedBy { get; set; }
+        public required string CreatedBy { get; set; }
+        public string? ModifiedBy { get; set; }
     }
     public struct CreateProductDTO
     {
@@ -21,9 +21,6 @@ namespace CRN_Technosoft.Application.DTO
 
     public struct EditProductDTO
     {
-        [Range(1, int.MaxValue)]
-        public int Id { get; set; }
-
         [Required]
         [StringLength(200, MinimumLength = 1)]
         public required string ProductName { get; set; }

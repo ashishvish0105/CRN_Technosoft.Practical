@@ -14,6 +14,7 @@ namespace CRN_Technosoft.Application.Handlers.Products
         {
             var productEntity = mapper.Map<ProductEntity>(request.EditProductDTO);
             productEntity.Id = request.productId;
+            productEntity.ModifiedBy = request.modifiedBy;
 
             return await productRepository.EditProduct(
                 request.productId,

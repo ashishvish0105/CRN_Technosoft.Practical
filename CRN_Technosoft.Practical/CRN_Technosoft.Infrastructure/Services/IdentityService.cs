@@ -19,7 +19,7 @@ namespace CRN_Technosoft.Infrastructure.Services
         {
             var user = await _userManager.FindByIdAsync(userId);
 
-            if (user == null)
+            if (user == null || !user.IsActive)
                 return Array.Empty<string>();
 
             var roles = await _userManager.GetRolesAsync(user);

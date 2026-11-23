@@ -26,7 +26,10 @@ namespace CRN_Technosoft.Application.Handlers.Users
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var user = await _userRepository.GetUserList(cancellationToken);
+            var user = await _userRepository.GetUserList(
+                request.PageIndex,
+                request.PageSize,
+                cancellationToken);
             return user.Select(u => new GetUserDTO
             {
                 Id = u.Id,

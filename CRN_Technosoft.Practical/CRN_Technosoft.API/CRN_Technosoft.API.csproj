@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>0d7a731c-0656-4076-bc22-9c44cbaa6c99</UserSecretsId>
@@ -16,17 +16,16 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="17.0.0" />
     <PackageReference Include="MediatR" Version="15.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.20" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.22" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.23" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.22" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.22" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.22" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.20">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.22" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.22" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.22">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

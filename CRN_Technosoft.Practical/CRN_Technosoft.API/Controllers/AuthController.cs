@@ -1,5 +1,6 @@
 ﻿using CRN_Technosoft.Application.Command.Login;
 using CRN_Technosoft.Application.Command.Users;
+using CRN_Technosoft.Application.Common.Interfaces;
 using CRN_Technosoft.Application.DTO;
 using CRN_Technosoft.Application.Queries.Users;
 using CRN_Technosoft.Domain.Common.Models;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 namespace CRN_Technosoft.API.Controllers
 {
@@ -18,10 +20,29 @@ namespace CRN_Technosoft.API.Controllers
     public sealed class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, IJwtTokenService jwtTokenService)
         {
             _mediator = mediator;
+            _jwtTokenService = jwtTokenService;
+        }
+
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        [EnableRateLimiting("Authentication")]
+        public async Task<ActionResult<ApiResponseModel>> RefreshToken(
+            [FromBody] RefreshTokenRequestDto request,
+            CancellationToken cancellationToken)
+        {
+            var tokenResponse = await _jwtTokenService.RefreshTokenAsync(
+                request.RefreshToken,
+                cancellationToken);
+
+            return Ok(CreateResponse(
+                "Tokens refreshed successfully",
+                StatusCodes.Status200OK,
+                tokenResponse));
         }
 
         [HttpPost("Login")]
@@ -63,13 +84,18 @@ namespace CRN_Technosoft.API.Controllers
             return CreatedAtAction(nameof(GetUser), new { userId }, response);
         }
 
-        [HttpPut("{userId:guid}")]
-        //[Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpPut("{userId:int}")]
+        [Authorize]
         public async Task<ActionResult<ApiResponseModel>> EditUser(
             [FromRoute] int userId,
             [FromBody] EditUserDTO editUserDto,
             CancellationToken cancellationToken)
         {
+            if (!IsAdministrator() && !IsAuthenticatedUser(userId))
+            {
+                return Forbid();
+            }
+
             if (editUserDto.Id != userId)
             {
                 return BadRequest(CreateResponse(
@@ -98,16 +124,21 @@ namespace CRN_Technosoft.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,SuperAdmin")]
-        public async Task<ActionResult<ApiResponseModel>> GetUserList(CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResponseModel>> GetUserList(
+            [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+            [FromQuery, Range(1, 100)] int pageSize = 10,
+            CancellationToken cancellationToken = default)
         {
-            var users = await _mediator.Send(new GetUserListQuery(), cancellationToken);
+            var users = await _mediator.Send(
+                new GetUserListQuery(pageIndex, pageSize),
+                cancellationToken);
             return Ok(CreateResponse(
                 "Users retrieved successfully",
                 StatusCodes.Status200OK,
                 users));
         }
 
-        [HttpGet("{userId:guid}")]
+        [HttpGet("{userId:int}")]
         [Authorize]
         public async Task<ActionResult<ApiResponseModel>> GetUser(
             [FromRoute] int userId,

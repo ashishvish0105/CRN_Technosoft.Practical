@@ -3,5 +3,5 @@ using MediatR;
 
 namespace CRN_Technosoft.Application.Command.Products
 {
-    public record EditProductCommand(int productId, EditProductDTO EditProductDTO) : IRequest<bool>;
+    public record EditProductCommand(int productId, EditProductDTO EditProductDTO, string modifiedBy) : IRequest<bool>;
 }

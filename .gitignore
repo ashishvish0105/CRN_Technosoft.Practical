@@ -1,5 +1,9 @@
 /.vs
 /obj
+/.env
+/.env.*
+!/.env.example
+/CRN_Technosoft.Practical/**/bin/
 /CRN_Technosoft.Practical/.vs
 /CRN_Technosoft.Practical/CRN_Technosoft.API/obj
 /CRN_Technosoft.Practical/CRN_Technosoft.Application/obj

@@ -21,9 +21,12 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponseModel>> GetProductList([FromQuery] int pageIndex, int totalLength,CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponseModel>> GetProductList(
+        [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+        [FromQuery, Range(1, 100)] int totalLength = 10,
+        CancellationToken cancellationToken = default)
     {
-        var products = await _mediator.Send(new GetProductListQuery(pageIndex > 0 ? pageIndex : 1, totalLength > 0 ? totalLength : 10), cancellationToken);
+        var products = await _mediator.Send(new GetProductListQuery(pageIndex, totalLength), cancellationToken);
         return Ok(new ApiResponseModel(
             "Products retrieved successfully",
             StatusCodes.Status200OK,
@@ -38,10 +41,10 @@ public sealed class ProductsController : ControllerBase
         var product = await _mediator.Send(new GetProductByIdQuery(id), cancellationToken);
         if (product is null)
         {
-            return NotFound(new ApiResponseModel(
-                "Product not found.",
-                StatusCodes.Status404NotFound,
-                string.Empty));
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Product not found",
+                detail: "No product exists with the requested identifier.");
         }
 
         return Ok(new ApiResponseModel(
@@ -56,9 +59,15 @@ public sealed class ProductsController : ControllerBase
         [FromBody] CreateProductDTO request,
         CancellationToken cancellationToken)
     {
-        var product = await _mediator.Send(new AddProductCommand(request), cancellationToken);
-        return StatusCode(
-            StatusCodes.Status201Created,
+        var createdBy = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(createdBy))
+        {
+            return Unauthorized();
+        }
+        var product = await _mediator.Send(new AddProductCommand(request, createdBy), cancellationToken);
+        return CreatedAtAction(
+            nameof(GetProductById),
+            new { id = product.Id },
             new ApiResponseModel(
                 "Product added successfully",
                 StatusCodes.Status201Created,
@@ -72,13 +81,18 @@ public sealed class ProductsController : ControllerBase
         [FromBody] EditProductDTO request,
         CancellationToken cancellationToken)
     {
-        var updated = await _mediator.Send(new EditProductCommand(id, request), cancellationToken);
+        var modifiedBy = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(modifiedBy))
+        {
+            return Unauthorized();
+        }
+        var updated = await _mediator.Send(new EditProductCommand(id, request, modifiedBy), cancellationToken);
         if (!updated)
         {
-            return NotFound(new ApiResponseModel(
-                "Product not found.",
-                StatusCodes.Status404NotFound,
-                string.Empty));
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Product not found",
+                detail: "No product exists with the requested identifier.");
         }
 
         return Ok(new ApiResponseModel(
@@ -96,15 +110,12 @@ public sealed class ProductsController : ControllerBase
         var deleted = await _mediator.Send(new DeleteProductCommand(id), cancellationToken);
         if (!deleted)
         {
-            return NotFound(new ApiResponseModel(
-                "Product not found.",
-                StatusCodes.Status404NotFound,
-                string.Empty));
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Product not found",
+                detail: "No product exists with the requested identifier.");
         }
 
-        return Ok(new ApiResponseModel(
-            "Product deleted successfully",
-            StatusCodes.Status200OK,
-            true));
+        return NoContent();
     }
 }
