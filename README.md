@@ -37,6 +37,13 @@ dotnet run --project .\CRN_Technosoft.Practical\CRN_Technosoft.API
 
 In Development, the API creates the database schema if no EF migrations have been added; otherwise it applies pending migrations. Browse to `https://localhost:7047/swagger` or `http://localhost:5098/swagger`.
 
+To create migrations from Visual Studio's Package Manager Console, target the Infrastructure project (where `ApplicationDbContext` is defined) and use the API as the startup project:
+
+```powershell
+Add-Migration InitialCreate -Project CRN_Technosoft.Infrastructure -StartupProject CRN_Technosoft.API
+Update-Database -Project CRN_Technosoft.Infrastructure -StartupProject CRN_Technosoft.API
+```
+
 ## Run with Docker Compose
 
 Copy `.env.example` to `.env`, replace both sample values with strong secrets, then run:
