@@ -11,7 +11,7 @@ using System.ComponentModel.DataAnnotations;
 namespace CRN_Technosoft.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/items")]
 public sealed class ItemsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

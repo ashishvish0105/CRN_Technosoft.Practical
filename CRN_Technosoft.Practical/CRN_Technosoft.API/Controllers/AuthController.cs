@@ -16,7 +16,7 @@ namespace CRN_Technosoft.API.Controllers
 {
 
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public sealed class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -39,7 +39,7 @@ namespace CRN_Technosoft.API.Controllers
                 request.RefreshToken,
                 cancellationToken);
 
-            return Ok(CreateResponse(
+            return Ok(new ApiResponseModel(
                 "Tokens refreshed successfully",
                 StatusCodes.Status200OK,
                 tokenResponse));
@@ -59,7 +59,7 @@ namespace CRN_Technosoft.API.Controllers
                 throw new InvalidOperationException("Authentication completed without a valid token result.");
             }
 
-            var response = CreateResponse("User retrieved successfully", StatusCodes.Status200OK, userDetails);
+            var response = new ApiResponseModel("User retrieved successfully", StatusCodes.Status200OK, userDetails);
             return Ok(response);
         }
 
@@ -76,12 +76,12 @@ namespace CRN_Technosoft.API.Controllers
                 throw new InvalidOperationException("User registration did not produce a user identifier.");
             }
 
-            var response = CreateResponse(
+            var response = new ApiResponseModel(
                 "User added successfully",
                 StatusCodes.Status201Created,
                 new { userId });
 
-            return CreatedAtAction(nameof(GetUser), new { userId }, response);
+            return Ok(response);
         }
 
         [HttpPut("{userId:int}")]
@@ -98,7 +98,7 @@ namespace CRN_Technosoft.API.Controllers
 
             if (editUserDto.Id != userId)
             {
-                return BadRequest(CreateResponse(
+                return BadRequest(new ApiResponseModel(
                     "The route user identifier must match the request body.",
                     StatusCodes.Status400BadRequest,
                     string.Empty));
@@ -110,13 +110,13 @@ namespace CRN_Technosoft.API.Controllers
 
             if (updatedUserId == 0)
             {
-                return NotFound(CreateResponse(
+                return NotFound(new ApiResponseModel(
                     "User not found.",
                     StatusCodes.Status404NotFound,
                     string.Empty));
             }
 
-            return Ok(CreateResponse(
+            return Ok(new ApiResponseModel(
                 "User edited successfully",
                 StatusCodes.Status200OK,
                 new { userId = updatedUserId }));
@@ -132,7 +132,7 @@ namespace CRN_Technosoft.API.Controllers
             var users = await _mediator.Send(
                 new GetUserListQuery(pageIndex, pageSize),
                 cancellationToken);
-            return Ok(CreateResponse(
+            return Ok(new ApiResponseModel(
                 "Users retrieved successfully",
                 StatusCodes.Status200OK,
                 users));
@@ -155,26 +155,16 @@ namespace CRN_Technosoft.API.Controllers
 
             if (user is null)
             {
-                return NotFound(CreateResponse(
+                return NotFound(new ApiResponseModel(
                     "User not found.",
                     StatusCodes.Status404NotFound,
                     string.Empty));
             }
 
-            return Ok(CreateResponse(
+            return Ok(new ApiResponseModel(
                 "User retrieved successfully",
                 StatusCodes.Status200OK,
                 user));
-        }
-
-        private static ApiResponseModel CreateResponse(string message, int statusCode, object payload)
-        {
-            return new ApiResponseModel
-            {
-                message = message,
-                statusCode = statusCode,
-                payload = payload
-            };
         }
 
         private bool IsAdministrator()

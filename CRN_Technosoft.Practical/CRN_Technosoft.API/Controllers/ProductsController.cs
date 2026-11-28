@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations;
 namespace CRN_Technosoft.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/products")]
 public sealed class ProductsController : ControllerBase
 {
     private readonly IMediator _mediator;

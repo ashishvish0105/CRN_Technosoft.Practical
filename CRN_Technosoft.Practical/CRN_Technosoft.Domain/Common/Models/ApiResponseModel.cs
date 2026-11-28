@@ -1,6 +1,6 @@
 ﻿namespace CRN_Technosoft.Domain.Common.Models
 {
-    public class ApiResponseModel
+    public  class ApiResponseModel
     {
         public int statusCode { get; set; }
         public string message { get; set; }
@@ -32,6 +32,5 @@
             message = "bad request";
             this.errors = errors ?? Array.Empty<string>();
         }
-
     }
 }

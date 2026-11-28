@@ -1,4 +1,241 @@
 
+//using MediatR;
+//using CRN_Technosoft.Application.Handlers.Login;
+//using CRN_Technosoft.Application.Mapping;
+//using CRN_Technosoft.Application.Common;
+//using CRN_Technosoft.Application.Validators;
+//using CRN_Technosoft.Application.Command.Products;
+//using CRN_Technosoft.API.Middleware;
+//using CRN_Technosoft.Infrastructure;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Identity;
+//using Microsoft.AspNetCore.ResponseCompression;
+//using Microsoft.AspNetCore.RateLimiting;
+//using Microsoft.EntityFrameworkCore;
+//using FluentValidation;
+//using Microsoft.Extensions.DependencyInjection;
+//using Microsoft.IdentityModel.Tokens;
+//using System.Net;
+//using System.Security.Claims;
+//using System.Text;
+//using System.Threading.RateLimiting;
+
+//var builder = WebApplication.CreateBuilder(args);
+//builder.Logging.ClearProviders();
+//builder.Logging.AddJsonConsole();
+
+//var jwtSecret = builder.Configuration["JwtSettings:SecretKey"];
+//var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
+//var jwtAudience = builder.Configuration["JwtSettings:Audience"];
+
+//if (string.IsNullOrWhiteSpace(jwtSecret) || Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+//{
+//    throw new InvalidOperationException(
+//        "Configure JwtSettings:SecretKey with a secret of at least 32 UTF-8 bytes using user-secrets or a secret store.");
+//}
+
+//if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
+//{
+//    throw new InvalidOperationException("Configure JwtSettings:Issuer and JwtSettings:Audience.");
+//}
+
+//builder.Services.AddControllers();
+//builder.Services.AddProblemDetails();
+//builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+//builder.Services.AddResponseCompression();
+//var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+//builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>
+//{
+//    if (allowedOrigins.Length == 0)
+//    {
+//        policy.SetIsOriginAllowed(_ => false);
+//    }
+//    else
+//    {
+//        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod();
+//    }
+//}));
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen(options =>
+//{
+//    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+//    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+//    if (File.Exists(xmlPath))
+//    {
+//        options.IncludeXmlComments(xmlPath);
+//    }
+
+//    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+//    {
+//        Name = "Authorization",
+//        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+//        Scheme = "bearer",
+//        BearerFormat = "JWT",
+//        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+//        Description = "Enter a valid JWT access token."
+//    });
+
+//    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+//    {
+//        {
+//            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+//            {
+//                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+//                {
+//                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+//                    Id = "Bearer"
+//                }
+//            },
+//            Array.Empty<string>()
+//        }
+//    });
+//});
+
+//builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfile).Assembly);
+//builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(LoginCommandHandler).Assembly));
+//builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+//builder.Services.AddTransient<IValidator<AddProductCommand>, AddProductCommandValidator>();
+//builder.Services.AddTransient<IValidator<EditProductCommand>, EditProductCommandValidator>();
+
+//builder.Services.AddInfrastructure(builder.Configuration);
+//builder.Services.AddAuthentication(options =>
+//    {
+//        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+//    })
+//    .AddJwtBearer(options =>
+//    {
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateIssuer = true,
+//            ValidateAudience = true,
+//            ValidateLifetime = true,
+//            ValidateIssuerSigningKey = true,
+//            ValidIssuer = jwtIssuer,
+//            ValidAudience = jwtAudience,
+//            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+//            RoleClaimType = ClaimTypes.Role,
+//            ClockSkew = TimeSpan.FromSeconds(30)
+//        };
+//    });
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+//        .RequireAuthenticatedUser()
+//        .Build();
+//});
+
+//builder.Services.AddRateLimiter(options =>
+//{
+//    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+//    options.AddPolicy("ApiScanner", httpContext =>
+//    {
+//        var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+//            ?? httpContext.User.FindFirstValue("sub");
+//        var partitionKey = userId ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+//        return RateLimitPartition.GetFixedWindowLimiter(
+//            partitionKey,
+//            _ => new FixedWindowRateLimiterOptions
+//            {
+//                AutoReplenishment = true,
+//                PermitLimit = 10,
+//                QueueLimit = 0,
+//                Window = TimeSpan.FromMinutes(1)
+//            });
+//    });
+
+//    options.AddPolicy("Authentication", httpContext =>
+//    {
+//        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+//        return RateLimitPartition.GetFixedWindowLimiter(
+//            partitionKey,
+//            _ => new FixedWindowRateLimiterOptions
+//            {
+//                AutoReplenishment = true,
+//                PermitLimit = 5,
+//                QueueLimit = 0,
+//                Window = TimeSpan.FromMinutes(5)
+//            });
+//    });
+//});
+
+//builder.Services.AddMemoryCache();
+
+
+//var app = builder.Build();
+
+//app.UseExceptionHandler();
+//app.UseStatusCodePages();
+//app.Use(async (context, next) =>
+//{
+//    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+//    context.Response.Headers["X-Frame-Options"] = "DENY";
+//    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+//    await next();
+//});
+//app.UseResponseCompression();
+
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI(options => options.InjectStylesheet("/swagger-custom.css"));
+//}
+//else
+//{
+//    app.UseHsts();
+//}
+
+//await using (var scope = app.Services.CreateAsyncScope())
+//{
+//    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    if (app.Environment.IsDevelopment())
+//    {
+//        if (context.Database.GetMigrations().Any())
+//        {
+//            await context.Database.MigrateAsync();
+//        }
+//        else
+//        {
+//            await context.Database.EnsureCreatedAsync();
+//        }
+//    }
+
+//    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
+//    foreach (var roleName in new[] { "Customer", "Admin", "SuperAdmin", "ProductManager" })
+//    {
+//        if (await roleManager.RoleExistsAsync(roleName))
+//        {
+//            continue;
+//        }
+
+//        var result = await roleManager.CreateAsync(new IdentityRole<int>(roleName));
+//        if (!result.Succeeded)
+//        {
+//            throw new InvalidOperationException(
+//                $"Could not create the required '{roleName}' role: " +
+//                string.Join("; ", result.Errors.Select(error => error.Description)));
+//        }
+//    }
+//}
+
+//app.UseHttpsRedirection();
+//app.UseStaticFiles();
+//app.UseRouting();
+//app.UseCors("Frontend");
+//app.UseAuthentication();
+//app.UseRateLimiter();
+//app.UseAuthorization();
+//app.MapControllers();
+
+
+//app.Run();
+
+
 using MediatR;
 using CRN_Technosoft.Application.Handlers.Login;
 using CRN_Technosoft.Application.Mapping;
@@ -13,129 +250,193 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 
+// JWT Configuration
 var jwtSecret = builder.Configuration["JwtSettings:SecretKey"];
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
 var jwtAudience = builder.Configuration["JwtSettings:Audience"];
 
-if (string.IsNullOrWhiteSpace(jwtSecret) || Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+if (string.IsNullOrWhiteSpace(jwtSecret) ||
+    Encoding.UTF8.GetByteCount(jwtSecret) < 32)
 {
     throw new InvalidOperationException(
-        "Configure JwtSettings:SecretKey with a secret of at least 32 UTF-8 bytes using user-secrets or a secret store.");
+        "Configure JwtSettings:SecretKey with at least 32 UTF-8 bytes.");
 }
 
-if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
+if (string.IsNullOrWhiteSpace(jwtIssuer) ||
+    string.IsNullOrWhiteSpace(jwtAudience))
 {
-    throw new InvalidOperationException("Configure JwtSettings:Issuer and JwtSettings:Audience.");
+    throw new InvalidOperationException(
+        "Configure JwtSettings:Issuer and JwtSettings:Audience.");
 }
 
+// Controllers and Exception Handling
 builder.Services.AddControllers();
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+
+// Response Compression
 builder.Services.AddResponseCompression();
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>
+
+// CORS
+var allowedOrigins =
+    builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
 {
-    if (allowedOrigins.Length == 0)
+    options.AddPolicy("Frontend", policy =>
     {
-        policy.SetIsOriginAllowed(_ => false);
-    }
-    else
-    {
-        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod();
-    }
-}));
+        if (allowedOrigins.Length == 0)
+        {
+            policy.SetIsOriginAllowed(_ => false);
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
+});
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlFile =
+        $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
     if (File.Exists(xmlPath))
     {
         options.IncludeXmlComments(xmlPath);
     }
 
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Enter a valid JWT access token."
-    });
-
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
+    options.AddSecurityDefinition("Bearer",
+        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            Name = "Authorization",
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Description = "Enter a valid JWT access token."
+        });
+
+    options.AddSecurityRequirement(
+        new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+        {
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    {
+                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
 });
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfile).Assembly);
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(LoginCommandHandler).Assembly));
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-builder.Services.AddTransient<IValidator<AddProductCommand>, AddProductCommandValidator>();
-builder.Services.AddTransient<IValidator<EditProductCommand>, EditProductCommandValidator>();
+// AutoMapper
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(AutoMapperProfile).Assembly);
 
+// MediatR
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(
+        typeof(LoginCommandHandler).Assembly));
+
+// FluentValidation Pipeline
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(ValidationBehavior<,>));
+
+builder.Services.AddTransient<
+    IValidator<AddProductCommand>,
+    AddProductCommandValidator>();
+
+builder.Services.AddTransient<
+    IValidator<EditProductCommand>,
+    EditProductCommandValidator>();
+
+// Infrastructure
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.FromSeconds(30)
-        };
-    });
 
+// Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+
+    options.DefaultChallengeScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+
+    options.DefaultScheme =
+        JwtBearerDefaults.AuthenticationScheme;
+
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtSecret)),
+
+        RoleClaimType = ClaimTypes.Role,
+        ClockSkew = TimeSpan.FromSeconds(30)
+    };
+});
+
+// Authorization
 builder.Services.AddAuthorization(options =>
 {
-    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+    options.FallbackPolicy =
+        new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
 });
 
+// Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.RejectionStatusCode =
+        StatusCodes.Status429TooManyRequests;
 
     options.AddPolicy("ApiScanner", httpContext =>
     {
-        var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+        var userId =
+            httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? httpContext.User.FindFirstValue("sub");
-        var partitionKey = userId ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        var partitionKey =
+            userId ??
+            httpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown";
 
         return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey,
@@ -150,7 +451,9 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddPolicy("Authentication", httpContext =>
     {
-        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var partitionKey =
+            httpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown";
 
         return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey,
@@ -164,35 +467,85 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// Memory Cache
 builder.Services.AddMemoryCache();
 
 
+// ==========================================
+// BUILD APPLICATION
+// ==========================================
+
 var app = builder.Build();
 
+
+// ==========================================
+// MIDDLEWARE PIPELINE
+// ==========================================
+
+// 1. Global exception handling (must be early)
 app.UseExceptionHandler();
+
+// 2. Status code handling
 app.UseStatusCodePages();
+
+// 3. Security Headers
 app.Use(async (context, next) =>
 {
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
+
     await next();
 });
+
+// 4. Response Compression
 app.UseResponseCompression();
 
+// 5. HTTPS and HSTS
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(options => options.InjectStylesheet("/swagger-custom.css"));
+    app.UseSwaggerUI(options =>
+        options.InjectStylesheet("/swagger-custom.css"));
 }
 else
 {
     app.UseHsts();
 }
 
+app.UseHttpsRedirection();
+
+// 6. Static Files
+app.UseStaticFiles();
+
+// 7. Routing
+app.UseRouting();
+
+// 8. CORS
+app.UseCors("Frontend");
+
+// 9. Authentication
+app.UseAuthentication();
+
+// 10. Rate Limiting
+app.UseRateLimiter();
+
+// 11. Authorization
+app.UseAuthorization();
+
+// 12. Controllers
+app.MapControllers();
+
+
+// ==========================================
+// DATABASE MIGRATION AND ROLE SEEDING
+// ==========================================
+
 await using (var scope = app.Services.CreateAsyncScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var context =
+        scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
     if (app.Environment.IsDevelopment())
     {
         if (context.Database.GetMigrations().Any())
@@ -205,32 +558,45 @@ await using (var scope = app.Services.CreateAsyncScope())
         }
     }
 
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    foreach (var roleName in new[] { "Customer", "Admin", "SuperAdmin", "ProductManager" })
+    var roleManager =
+        scope.ServiceProvider.GetRequiredService<
+            RoleManager<IdentityRole<int>>>();
+
+    foreach (var roleName in new[]
+    {
+        "Customer",
+        "Admin",
+        "SuperAdmin",
+        "ProductManager"
+    })
     {
         if (await roleManager.RoleExistsAsync(roleName))
-        {
             continue;
-        }
 
-        var result = await roleManager.CreateAsync(new IdentityRole<int>(roleName));
+        var result = await roleManager.CreateAsync(
+            new IdentityRole<int>(roleName));
+
         if (!result.Succeeded)
         {
             throw new InvalidOperationException(
                 $"Could not create the required '{roleName}' role: " +
-                string.Join("; ", result.Errors.Select(error => error.Description)));
+                string.Join("; ",
+                    result.Errors.Select(error => error.Description)));
         }
     }
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseCors("Frontend");
-app.UseAuthentication();
-app.UseRateLimiter();
-app.UseAuthorization();
-app.MapControllers();
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
+   .AllowAnonymous()
+   .ExcludeFromDescription();
 
+}
+
+// ==========================================
+// RUN APPLICATION
+// ==========================================
 
 app.Run();
+

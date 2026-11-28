@@ -24,19 +24,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             .ToTable("tblUsers", "User");
 
         modelBuilder.Entity<IdentityUserClaim<int>>()
-            .ToTable("tblUserClaims", "User");
+            .ToTable("tblUserClaims", "Auth");
 
         modelBuilder.Entity<IdentityUserLogin<int>>()
-            .ToTable("tblUserLogins", "User");
+            .ToTable("tblUserLogins", "Auth");
 
         modelBuilder.Entity<IdentityUserToken<int>>()
-            .ToTable("tblUserTokens", "User");
+            .ToTable("tblUserTokens", "Auth");
 
         modelBuilder.Entity<IdentityRole<int>>()
             .ToTable("tblRoles", "User");
 
         modelBuilder.Entity<IdentityRoleClaim<int>>()
-            .ToTable("tblRoleClaims", "User");
+            .ToTable("tblRoleClaims", "Auth");
 
         modelBuilder.Entity<IdentityUserRole<int>>()
             .ToTable("tblUserRoles", "User");
@@ -44,7 +44,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
 
         modelBuilder.Entity<ProductEntity>(entity =>
         {
-            entity.ToTable("Product", "dbo");
+            entity.ToTable("tblProduct", "Product");
 
             entity.HasKey(x => x.Id);
 
@@ -71,7 +71,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
 
         modelBuilder.Entity<ItemEntity>(entity =>
         {
-            entity.ToTable("Item", "dbo");
+            entity.ToTable("tblItem", "Product");
 
             entity.HasKey(x => x.Id);
 
@@ -86,7 +86,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
 
         modelBuilder.Entity<RefreshTokenEntity>(entity =>
         {
-            entity.ToTable("RefreshToken", "dbo");
+            entity.ToTable("tblRefreshToken", "Auth");
             entity.HasKey(token => token.Id);
             entity.Property(token => token.TokenHash)
                 .HasMaxLength(64)
